@@ -15,16 +15,18 @@ class CountingQuotientFilter
  public:
   CountingQuotientFilter();
   void insert(ElementType element);
-  bool lookup();
+  bool lookup(ElementType element);
 
  private:
-  std::pair<QuotientType, RemainderType> hash(ElementType);
+  QuotientType hash_quotient(ElementType);
+  RemainderType hash_remainder(ElementType);
   bool is_slot_occupied(QuotientType slot_id);
   bool is_slot_runend(QuotientType slot_id);
   void set_slot_occupied(QuotientType slot_id);
   void set_slot_runend(QuotientType slot_id);
   void clear_slot_occupied(QuotientType slot_id);
   void clear_slot_runend(QuotientType slot_id);
+  size_t find_first_unused_slot(x);
 
   std::vector<uint8_t> _occupieds;
   std::vector<uint8_t> _runends;
