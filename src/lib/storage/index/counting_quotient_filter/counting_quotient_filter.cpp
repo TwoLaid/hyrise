@@ -6,13 +6,15 @@ namespace opossum {
 
 CountingQuotientFilter::CountingQuotientFilter() {
   _remainders.resize(std::pow(2, sizeof(QuotientType)));
+  _occupieds.resize(std::pow(2, sizeof(QuotientType)) / 8);
+  _runends.resize(std::pow(2, sizeof(QuotientType)) / 8);
 }
 
 size_t CountingQuotientFilter::find_first_unused_slot(QuotientType quotient) {
   auto rank = rank(_occupieds, quotient);
-  auto select = select(_runends, r);
+  auto select = select(_runends, rank);
 
-  while (quotient < s) {
+  while (quotient < select) {
     quotient = select + 1;
     rank = rank(_occupieds, quotient);
     select = select(_runends, select);
@@ -24,29 +26,31 @@ size_t CountingQuotientFilter::find_first_unused_slot(QuotientType quotient) {
 void CountingQuotientFilter::insert(ElementType element) {
   auto quotient = hash_quotient(element);
   auto remainder = hash_remainder(element);
-  auto r = rank(_occupieds, quotient);
-  auto s = select(_runends, r);
-  if (quotient > s) {
+  auto rank = rank(_occupieds, quotient);
+  auto select = select(_runends, rank);
+  if (quotient > select) {
     _remainders[quotient] = remainder;
-    set_slot_runend(quotient);
+    set_bit(_runends, quotient);
   } else {
-    ++s;
-    auto n = find_first_unused_slot();
-    while (n > s) {
+    ++select;
+    auto n = find_first_unused_slot(select);
+    while (n > select) {
       remainders[n] = remainders[n - 1];
-      runends[n] = runends[n - 1];
+      set_bit(_runends, n, is_bit_set(_runends, n -1));
       --n;
     }
-    _remainders[s] = remainder;
-    if (occupieds[quotient] == 1) {
+    _remainders[select] = remainder;
+    if (is_bit_set(_occupieds, quotient)) {
+      clear_bit(_runends, select - 1);
     }
-    runend[s] = 1;
+    set_bit(_runends, select);
   }
+  set_bit(_occupieds, quotient);
 }
 
 bool CountingQuotientFilter::lookup(ElementType element) {
   auto quotient = hash_quotient(element);
-  if (!is_slot_occupied(quotient)) {
+  if (!is_bit_set(_occupieds, quotient)) {
     return false;
   }
   auto t = rank(_occupieds, quotient);
@@ -56,7 +60,7 @@ bool CountingQuotientFilter::lookup(ElementType element) {
     if (_remainders[l] == remainder) {
       return true;
     }
-  } while (!(l < b || is_slot_runend(l)));
+  } while (l >= b && !is_bit_set(_runends, l));
   return false;
 }
 
@@ -110,6 +114,17 @@ void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bi
 }
 
 /**
+* Sets the bit at a certain position in a bit vector to the specified value.
+**/
+void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value) {
+  if (value) {
+    set_bit(bit_vector, bit);
+  } else {
+    clear_bit(bit_vector, bit);
+  }
+}
+
+/**
 * Clears the bit at a certain position in a bit vector.
 **/
 void CountingQuotientFilter::clear_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
@@ -134,30 +149,6 @@ QuotientType CountingQuotientFilter::hash_quotient(ElementType value) {
 RemainderType CountingQuotientFilter::hash_remainder(ElementType value) {
   auto hash = xxh::xxhash<32, ElementType>(&value, 1);
   return static_cast<RemainderType>(hash);
-}
-
-bool CountingQuotientFilter::is_slot_occupied(QuotientType slot_id) {
-  return is_bit_set(_occupieds, slot_id);
-}
-
-bool CountingQuotientFilter::is_slot_runend(QuotientType slot_id) {
-  return is_bit_set(_runends, slot_id);
-}
-
-void CountingQuotientFilter::set_slot_occupied(QuotientType slot_id) {
-  set_bit(_occupieds, slot_id);
-}
-
-void CountingQuotientFilter::set_slot_runend(QuotientType slot_id) {
-  set_bit(_runends, slot_id);
-}
-
-void CountingQuotientFilter::clear_slot_occupied(QuotientType slot_id) {
-  clear_bit(_occupieds, slot_id);
-}
-
-void CountingQuotientFilter::clear_slot_runend(QuotientType slot_id) {
-  clear_bit(_runends, slot_id);
 }
 
 } // namespace opossum

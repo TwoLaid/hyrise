@@ -10,27 +10,22 @@ Repository: https://github.com/splatlab/cqf
 template <typename ElementType>
 class CountingQuotientFilter
 {
- using QuotientType = uint32_t;
- using RemainderType = uint8_t;
+ using QuotientType = uint16_t;
+ using RemainderType = uint16_t;
 
  public:
   CountingQuotientFilter();
-  void insert(ElementType element);
-  bool lookup(ElementType element);
+  void insert(ElementType value);
+  bool lookup(ElementType value);
 
  private:
-  QuotientType hash_quotient(ElementType);
-  RemainderType hash_remainder(ElementType);
+  QuotientType hash_quotient(ElementType value);
+  RemainderType hash_remainder(ElementType value);
   bool is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
   void set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
+  void set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value);
   void clear_bit(std::vector<uint8_t>& bit_vector, size_t bit);
-  bool is_slot_occupied(QuotientType slot_id);
-  bool is_slot_runend(QuotientType slot_id);
-  void set_slot_occupied(QuotientType slot_id);
-  void set_slot_runend(QuotientType slot_id);
-  void clear_slot_occupied(QuotientType slot_id);
-  void clear_slot_runend(QuotientType slot_id);
-  size_t find_first_unused_slot(x);
+  size_t find_first_unused_slot(QuotientType quotient);
 
   std::vector<uint8_t> _occupieds;
   std::vector<uint8_t> _runends;

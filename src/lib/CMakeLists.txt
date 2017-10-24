@@ -196,6 +196,8 @@ set(
     storage/index/adaptive_radix_tree/adaptive_radix_tree_index.hpp
     storage/index/adaptive_radix_tree/adaptive_radix_tree_nodes.cpp
     storage/index/adaptive_radix_tree/adaptive_radix_tree_nodes.hpp
+    storage/index/counting_quotient_filter/counting_quotient_filter.hpp
+    storage/index/counting_quotient_filter/counting_quotient_filter.cpp
     storage/index/base_index.hpp
     storage/index/group_key/composite_group_key_index.cpp
     storage/index/group_key/composite_group_key_index.hpp
@@ -245,6 +247,7 @@ set(
     utils/load_table.hpp
     utils/murmur_hash.cpp
     utils/murmur_hash.hpp
+    utils/xxhash.hpp
     utils/numa_memory_resource.cpp
     utils/numa_memory_resource.hpp
     utils/static_if.hpp
