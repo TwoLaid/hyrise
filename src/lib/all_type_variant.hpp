@@ -1,19 +1,15 @@
 #pragma once
 
 #include <boost/hana/ext/boost/mpl/vector.hpp>
-#include <boost/hana/pair.hpp>
 #include <boost/hana/prepend.hpp>
-#include <boost/hana/second.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/zip.hpp>
 #include <boost/mpl/push_front.hpp>
-#include <boost/variant.hpp>
-
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/transform.hpp>
-
+#include <boost/variant.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -101,8 +97,9 @@ static const auto NULL_VALUE = AllTypeVariant{};
 #define EXPLICIT_INSTANTIATION(r, template_class, type) template class template_class<type>;
 
 // Explicitly instantiates the given template class for all types in COLUMN_TYPES
-#define EXPLICITLY_INSTANTIATE_COLUMN_TYPES(template_class) \
-  BOOST_PP_SEQ_FOR_EACH(EXPLICIT_INSTANTIATION, template_class, COLUMN_TYPES)
+#define EXPLICITLY_INSTANTIATE_COLUMN_TYPES(template_class)                   \
+  BOOST_PP_SEQ_FOR_EACH(EXPLICIT_INSTANTIATION, template_class, COLUMN_TYPES) \
+  static_assert(true, "End call of macro with a semicolon")
 
 /**@}*/
 

@@ -1,9 +1,9 @@
 # Sources and libraries shared among the different builds of the lib
 set(
     SOURCES
+    all_parameter_variant.cpp
     all_parameter_variant.hpp
     all_type_variant.hpp
-    common.hpp
     concurrency/commit_context.cpp
     concurrency/commit_context.hpp
     concurrency/transaction_context.cpp
@@ -112,6 +112,8 @@ set(
     optimizer/abstract_syntax_tree/insert_node.hpp
     optimizer/abstract_syntax_tree/limit_node.cpp
     optimizer/abstract_syntax_tree/limit_node.hpp
+    optimizer/abstract_syntax_tree/mock_table_node.cpp
+    optimizer/abstract_syntax_tree/mock_table_node.hpp
     optimizer/abstract_syntax_tree/predicate_node.cpp
     optimizer/abstract_syntax_tree/predicate_node.hpp
     optimizer/abstract_syntax_tree/projection_node.cpp
@@ -145,7 +147,6 @@ set(
     planviz/ast_visualizer.hpp
     planviz/sql_query_plan_visualizer.cpp
     planviz/sql_query_plan_visualizer.hpp
-    polymorphic_allocator.hpp
     resolve_type.hpp
     scheduler/abstract_scheduler.cpp
     scheduler/abstract_scheduler.hpp
@@ -235,7 +236,6 @@ set(
     storage/value_column.hpp
     tasks/chunk_compression_task.cpp
     tasks/chunk_compression_task.hpp
-    type_cast.cpp
     type_cast.hpp
     type_comparison.hpp
     types.hpp
@@ -250,7 +250,8 @@ set(
     utils/xxhash.hpp
     utils/numa_memory_resource.cpp
     utils/numa_memory_resource.hpp
-    utils/static_if.hpp
+    utils/performance_warning.cpp
+    utils/performance_warning.hpp
 )
 
 set(
@@ -264,24 +265,9 @@ if(${NUMA_FOUND})
     set(LIBRARIES ${LIBRARIES} ${NUMA_LIBRARY} hpinuma_msource_s)
 endif()
 
-# Configure the regular opossum library used for tests/server/playground...
-add_library(opossum STATIC ${SOURCES})
-target_link_libraries(opossum ${LIBRARIES})
+# Configure the regular hyrise library used for tests/server/playground...
+add_library(hyrise STATIC ${SOURCES})
+target_link_libraries(hyrise ${LIBRARIES})
 
-# Configure the lib used for asan
-add_library(opossumAsanLib EXCLUDE_FROM_ALL STATIC ${SOURCES})
-target_link_libraries(
-    opossumAsanLib
-    ${LIBRARIES}
-    -fsanitize=address
-)
-set_target_properties(opossumAsanLib PROPERTIES COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
-
-# Configure the lib used for coverage
-add_library(opossumCoverageLib EXCLUDE_FROM_ALL STATIC ${SOURCES})
-target_link_libraries(
-    opossumCoverageLib
-    ${LIBRARIES}
-    --coverage
-)
-set_target_properties(opossumCoverageLib PROPERTIES COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+add_sanitizer_library(hyriseSanitizersLib "${SOURCES}" "${LIBRARIES}")
+add_coverage_library(hyriseCoverageLib "${SOURCES}" "${LIBRARIES}")
