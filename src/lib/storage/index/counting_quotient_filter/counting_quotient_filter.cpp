@@ -2,15 +2,19 @@
 #include "utils/murmur_hash.hpp"
 #include "utils/xxhash.hpp"
 
+#include <cmath>
+
 namespace opossum {
 
-CountingQuotientFilter::CountingQuotientFilter() {
+template <typename ElementType>
+CountingQuotientFilter<ElementType>::CountingQuotientFilter() {
   _remainders.resize(std::pow(2, sizeof(QuotientType)));
   _occupieds.resize(std::pow(2, sizeof(QuotientType)) / 8);
   _runends.resize(std::pow(2, sizeof(QuotientType)) / 8);
 }
 
-size_t CountingQuotientFilter::find_first_unused_slot(QuotientType quotient) {
+template <typename ElementType>
+QuotientType CountingQuotientFilter<ElementType>::find_first_unused_slot(QuotientType quotient) {
   auto rank = rank(_occupieds, quotient);
   auto select = select(_runends, rank);
 
@@ -23,7 +27,8 @@ size_t CountingQuotientFilter::find_first_unused_slot(QuotientType quotient) {
   return quotient;
 }
 
-void CountingQuotientFilter::insert(ElementType element) {
+template <typename ElementType>
+void CountingQuotientFilter<ElementType>::insert(ElementType element) {
   auto quotient = hash_quotient(element);
   auto remainder = hash_remainder(element);
   auto rank = rank(_occupieds, quotient);
@@ -35,7 +40,7 @@ void CountingQuotientFilter::insert(ElementType element) {
     ++select;
     auto n = find_first_unused_slot(select);
     while (n > select) {
-      remainders[n] = remainders[n - 1];
+      _remainders[n] = _remainders[n - 1];
       set_bit(_runends, n, is_bit_set(_runends, n -1));
       --n;
     }
@@ -48,7 +53,8 @@ void CountingQuotientFilter::insert(ElementType element) {
   set_bit(_occupieds, quotient);
 }
 
-bool CountingQuotientFilter::lookup(ElementType element) {
+template <typename ElementType>
+bool CountingQuotientFilter<ElementType>::lookup(ElementType element) {
   auto quotient = hash_quotient(element);
   if (!is_bit_set(_occupieds, quotient)) {
     return false;
@@ -67,7 +73,8 @@ bool CountingQuotientFilter::lookup(ElementType element) {
 /**
 * Returns the number of 1s in the bit vector up to a certain position.
 **/
-QuotientType CountingQuotientFilter::rank(std::vector<uint8_t>& bit_vector, QuotientType position) {
+template <typename ElementType>
+QuotientType CountingQuotientFilter<ElementType>::rank(std::vector<uint8_t>& bit_vector, QuotientType position) {
   QuotientType rank = 0;
   for (QuotientType i = 0; i <= position; i++) {
     if (is_bit_set(bit_vector, i)) {
@@ -81,24 +88,26 @@ QuotientType CountingQuotientFilter::rank(std::vector<uint8_t>& bit_vector, Quot
 /**
 * Returns the position of the n-th 1 in the bit-vector
 **/
-QuotientType CountingQuotientFilter::select(std::vector<uint8_t>& bit_vector, QuotientType n) {
-    QuotientType sum = 0;
-    for (QuotientType i = 0; i <= bit_vector.size() * 8; i++) {
-      if (is_bit_set(bit_vector, i)) {
-        ++sum;
-        if (sum == n) {
-          return i;
-        }
+template <typename ElementType>
+QuotientType CountingQuotientFilter<ElementType>::select(std::vector<uint8_t>& bit_vector, QuotientType n) {
+  QuotientType sum = 0;
+  for (QuotientType i = 0; i <= bit_vector.size() * 8; i++) {
+    if (is_bit_set(bit_vector, i)) {
+      ++sum;
+      if (sum == n) {
+        return i;
       }
     }
+  }
 
-    throw std::logic_error("select did not find the n-th 1 in the bit vector");
+  throw std::logic_error("select did not find the n-th 1 in the bit vector");
 }
 
 /**
 * Returns whether a bit at a certain position in the bit vector is set or not.
 **/
-bool CountingQuotientFilter::is_bit_set(std::vector<uint8_t>& bit_vector, size_t position) {
+template <typename ElementType>
+bool CountingQuotientFilter<ElementType>::is_bit_set(std::vector<uint8_t>& bit_vector, size_t position) {
   size_t byte_number = position / 8;
   size_t offset = position % 8;
   return bit_vector[byte_number] & 1 << offset;
@@ -107,7 +116,8 @@ bool CountingQuotientFilter::is_bit_set(std::vector<uint8_t>& bit_vector, size_t
 /**
 * Sets the bit at a certain position in a bit vector to 1.
 **/
-void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
+template <typename ElementType>
+void CountingQuotientFilter<ElementType>::set_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
     size_t byte_number = bit / 8;
     size_t offset = bit % 8;
     bit_vector[byte_number] = bit_vector[byte_number] | (1 << offset);
@@ -116,7 +126,8 @@ void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bi
 /**
 * Sets the bit at a certain position in a bit vector to the specified value.
 **/
-void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value) {
+template <typename ElementType>
+void CountingQuotientFilter<ElementType>::set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value) {
   if (value) {
     set_bit(bit_vector, bit);
   } else {
@@ -127,7 +138,8 @@ void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bi
 /**
 * Clears the bit at a certain position in a bit vector.
 **/
-void CountingQuotientFilter::clear_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
+template <typename ElementType>
+void CountingQuotientFilter<ElementType>::clear_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
     size_t byte_number = bit / 8;
     size_t offset = bit % 8;
     bit_vector[byte_number] = bit_vector[byte_number] & ~(1 << offset);
@@ -136,7 +148,8 @@ void CountingQuotientFilter::clear_bit(std::vector<uint8_t>& bit_vector, size_t 
 /**
 * Computes the quotient part of a value hash.
 **/
-QuotientType CountingQuotientFilter::hash_quotient(ElementType value) {
+template <typename ElementType>
+QuotientType CountingQuotientFilter<ElementType>::hash_quotient(ElementType value) {
   // arbitrary seed for the first hash iteration
   unsigned int seed = 13;
   auto hash = murmur2<ElementType>(value, seed);
@@ -146,7 +159,8 @@ QuotientType CountingQuotientFilter::hash_quotient(ElementType value) {
 /**
 * Computes the remainder part of a value hash.
 **/
-RemainderType CountingQuotientFilter::hash_remainder(ElementType value) {
+template <typename ElementType>
+RemainderType CountingQuotientFilter<ElementType>::hash_remainder(ElementType value) {
   auto hash = xxh::xxhash<32, ElementType>(&value, 1);
   return static_cast<RemainderType>(hash);
 }
