@@ -1,16 +1,47 @@
 #include "counting_quotient_filter.hpp"
+#include "utils/murmur_hash.hpp"
+#include "utils/xxhash.hpp"
+
+namespace opossum {
 
 CountingQuotientFilter::CountingQuotientFilter() {
   _remainders.resize(std::pow(2, sizeof(QuotientType)));
 }
 
-size_t CountingQuotientFilter::find_first_unused_slot(x) {
-  return 0;
+size_t CountingQuotientFilter::find_first_unused_slot(QuotientType quotient) {
+  auto rank = rank(_occupieds, quotient);
+  auto select = select(_runends, r);
+
+  while (quotient < s) {
+    quotient = select + 1;
+    rank = rank(_occupieds, quotient);
+    select = select(_runends, select);
+  }
+
+  return quotient;
 }
 
 void CountingQuotientFilter::insert(ElementType element) {
   auto quotient = hash_quotient(element);
-  auto r = rank()
+  auto remainder = hash_remainder(element);
+  auto r = rank(_occupieds, quotient);
+  auto s = select(_runends, r);
+  if (quotient > s) {
+    _remainders[quotient] = remainder;
+    set_slot_runend(quotient);
+  } else {
+    ++s;
+    auto n = find_first_unused_slot();
+    while (n > s) {
+      remainders[n] = remainders[n - 1];
+      runends[n] = runends[n - 1];
+      --n;
+    }
+    _remainders[s] = remainder;
+    if (occupieds[quotient] == 1) {
+    }
+    runend[s] = 1;
+  }
 }
 
 bool CountingQuotientFilter::lookup(ElementType element) {
@@ -29,52 +60,104 @@ bool CountingQuotientFilter::lookup(ElementType element) {
   return false;
 }
 
-QuotientType CountingQuotientFilter::rank(std::vector<uint8_t>& bit_vector, ??) {
+/**
+* Returns the number of 1s in the bit vector up to a certain position.
+**/
+QuotientType CountingQuotientFilter::rank(std::vector<uint8_t>& bit_vector, QuotientType position) {
+  QuotientType rank = 0;
+  for (QuotientType i = 0; i <= position; i++) {
+    if (is_bit_set(bit_vector, i)) {
+      ++rank;
+    }
+  }
+
+  return rank;
 }
 
-QuotientType CountingQuotientFilter::select(std::vector<uint8_t>& bit_vector, ??) {
+/**
+* Returns the position of the n-th 1 in the bit-vector
+**/
+QuotientType CountingQuotientFilter::select(std::vector<uint8_t>& bit_vector, QuotientType n) {
+    QuotientType sum = 0;
+    for (QuotientType i = 0; i <= bit_vector.size() * 8; i++) {
+      if (is_bit_set(bit_vector, i)) {
+        ++sum;
+        if (sum == n) {
+          return i;
+        }
+      }
+    }
+
+    throw std::logic_error("select did not find the n-th 1 in the bit vector");
 }
 
-QuotientType CountingQuotientFilter::hash_quotient(ElementType) {
-  return 0u;
+/**
+* Returns whether a bit at a certain position in the bit vector is set or not.
+**/
+bool CountingQuotientFilter::is_bit_set(std::vector<uint8_t>& bit_vector, size_t position) {
+  size_t byte_number = position / 8;
+  size_t offset = position % 8;
+  return bit_vector[byte_number] & 1 << offset;
 }
 
-RemainderType CountingQuotientFilter::hash_remainder(ElementType) {
-  return 0u;
+/**
+* Sets the bit at a certain position in a bit vector to 1.
+**/
+void CountingQuotientFilter::set_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
+    size_t byte_number = bit / 8;
+    size_t offset = bit % 8;
+    bit_vector[byte_number] = bit_vector[byte_number] | (1 << offset);
+}
+
+/**
+* Clears the bit at a certain position in a bit vector.
+**/
+void CountingQuotientFilter::clear_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
+    size_t byte_number = bit / 8;
+    size_t offset = bit % 8;
+    bit_vector[byte_number] = bit_vector[byte_number] & ~(1 << offset);
+}
+
+/**
+* Computes the quotient part of a value hash.
+**/
+QuotientType CountingQuotientFilter::hash_quotient(ElementType value) {
+  // arbitrary seed for the first hash iteration
+  unsigned int seed = 13;
+  auto hash = murmur2<ElementType>(value, seed);
+  return static_cast<QuotientType>(hash);
+}
+
+/**
+* Computes the remainder part of a value hash.
+**/
+RemainderType CountingQuotientFilter::hash_remainder(ElementType value) {
+  auto hash = xxh::xxhash<32, ElementType>(&value, 1);
+  return static_cast<RemainderType>(hash);
 }
 
 bool CountingQuotientFilter::is_slot_occupied(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  return _occupieds[byte_number] & 1 << offset;
+  return is_bit_set(_occupieds, slot_id);
 }
 
 bool CountingQuotientFilter::is_slot_runend(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  return _runends[byte_number] & (1 << offset);
+  return is_bit_set(_runends, slot_id);
 }
 
 void CountingQuotientFilter::set_slot_occupied(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  _occupieds[byte_number] = _occupieds[byte_number] | (1 << offset);
+  set_bit(_occupieds, slot_id);
 }
 
 void CountingQuotientFilter::set_slot_runend(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  _runends[byte_number] = _runends[byte_number] | (1 << offset);
+  set_bit(_runends, slot_id);
 }
 
 void CountingQuotientFilter::clear_slot_occupied(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  _occupieds[byte_number] = _occupieds[byte_number] & ~(1 << offset);
+  clear_bit(_occupieds, slot_id);
 }
 
 void CountingQuotientFilter::clear_slot_runend(QuotientType slot_id) {
-  size_t byte_number = slot_id / 8;
-  size_t offset = slot_id % 8;
-  _occupieds[byte_number] = _occupieds[byte_number] & ~(1 << offset);
+  clear_bit(_runends, slot_id);
 }
+
+} // namespace opossum

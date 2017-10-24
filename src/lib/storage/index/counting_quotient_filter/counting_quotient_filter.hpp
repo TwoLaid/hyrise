@@ -1,3 +1,4 @@
+#pragma once
 
 namespace opossum {
 
@@ -20,6 +21,9 @@ class CountingQuotientFilter
  private:
   QuotientType hash_quotient(ElementType);
   RemainderType hash_remainder(ElementType);
+  bool is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
+  void set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
+  void clear_bit(std::vector<uint8_t>& bit_vector, size_t bit);
   bool is_slot_occupied(QuotientType slot_id);
   bool is_slot_runend(QuotientType slot_id);
   void set_slot_occupied(QuotientType slot_id);
