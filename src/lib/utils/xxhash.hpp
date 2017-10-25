@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <cstring>
 
 /*
 xxHash - Extremely Fast Hash algorithm
@@ -43,12 +44,12 @@ You can contact the author at :
 *  Tuning parameters
 ***************************************/
 /*!XXH_FORCE_MEMORY_ACCESS :
-* By default, access to unaligned memory is controlled by `memcpy()`, which is safe and portable.
+* By default, access to unaligned memory is controlled by `std::memcpy()`, which is safe and portable.
 * Unfortunately, on some target/compiler combinations, the generated assembly is sub-optimal.
 * The below switch allow to select different access method for improved performance.
-* Method 0 (default) : use `memcpy()`. Safe and portable.
+* Method 0 (default) : use `std::memcpy()`. Safe and portable.
 * Method 1 : `__packed` statement. It depends on compiler extension (ie, not portable).
-*            This method is safe if your compiler supports it, and *generally* as fast or faster than `memcpy`.
+*            This method is safe if your compiler supports it, and *generally* as fast or faster than `std::memcpy`.
 * Method 2 : direct access. This method doesn't depend on compiler but violate C standard.
 *            It can generate buggy code on targets which do not support unaligned memory accesses.
 *            But in some circumstances, it's the only known way to get the most performance (ie GCC + ARMv6)
@@ -229,7 +230,7 @@ namespace xxh
         XXH_FORCE_STATIC_INLINE hash_t<N> read_unaligned(const void* memPtr)
         {
             hash_t<N> val;
-            memcpy(&val, memPtr, sizeof(val));
+            std::memcpy(&val, memPtr, sizeof(val));
             return val;
         }
 
@@ -516,14 +517,14 @@ namespace xxh
 
             if (memsize + length < (N / 2))
             {   /* fill in tmp buffer */
-                memcpy(reinterpret_cast<uint8_t*>(mem.data()) + memsize, input, length);
+                std::memcpy(reinterpret_cast<uint8_t*>(mem.data()) + memsize, input, length);
                 memsize += static_cast<uint32_t>(length);
                 return error_code::ok;
             }
 
             if (memsize)
             {   /* some data left from previous update */
-                memcpy(reinterpret_cast<uint8_t*>(mem.data()) + memsize, input, (N / 2) - memsize);
+                std::memcpy(reinterpret_cast<uint8_t*>(mem.data()) + memsize, input, (N / 2) - memsize);
 
                 const hash_t<N>* ptr = mem.data();
                 v1 = detail::round<N>(v1, mem_ops::readLE<N>(ptr, endian)); ptr++;
@@ -550,7 +551,7 @@ namespace xxh
 
             if (p < bEnd)
             {
-                memcpy(mem.data(), p, static_cast<size_t>(bEnd - p));
+                std::memcpy(mem.data(), p, static_cast<size_t>(bEnd - p));
                 memsize = static_cast<uint32_t>(bEnd - p);
             }
 
@@ -645,7 +646,7 @@ namespace xxh
 
         hash_state_t operator=(hash_state_t<N>& other)
         {
-            memcpy(this, other, sizeof(hash_state_t<N>));
+            std::memcpy(this, other, sizeof(hash_state_t<N>));
         }
 
         error_code reset(hash_t<N> seed)
@@ -722,7 +723,7 @@ namespace xxh
         canonical_t(hash_t<N> hash)
         {
             if (XXH_CPU_LITTLE_ENDIAN) {hash = bit_ops::swap<N>(hash);}
-            memcpy(digest.data(), &hash, sizeof(canonical_t<N>));
+            std::memcpy(digest.data(), &hash, sizeof(canonical_t<N>));
         }
 
         hash_t<N> get_hash()
