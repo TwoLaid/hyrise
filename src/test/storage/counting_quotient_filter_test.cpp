@@ -23,13 +23,14 @@ class CountingQuotientFilterTest : public BaseTest {
 
 TEST_F(CountingQuotientFilterTest, Insert) {
   auto filter = CountingQuotientFilter<int>();
-  std::cout << "before insert" << std::endl;
   filter.insert(7);
-  std::cout << "after insert" << std::endl;
-  EXPECT_EQ(6u, 6u);
+  EXPECT_EQ(filter.number_of_occupied_slots(), 1u);
 }
 
 TEST_F(CountingQuotientFilterTest, Membership) {
+  auto filter = CountingQuotientFilter<int>();
+  filter.insert(7);
+  EXPECT_TRUE(filter.lookup(7));
 }
 
 } // namespace opossum

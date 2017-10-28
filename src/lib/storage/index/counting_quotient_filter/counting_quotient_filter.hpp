@@ -20,12 +20,13 @@ class CountingQuotientFilter
   CountingQuotientFilter();
   void insert(ElementType value);
   bool lookup(ElementType value);
+  uint64_t number_of_occupied_slots();
 
  private:
   QuotientType _hash_quotient(ElementType value);
   RemainderType _hash_remainder(ElementType value);
-  int64_t _rank(std::vector<uint8_t>& bit_vector, QuotientType position);
-  int64_t _select(std::vector<uint8_t>& bit_vector, int64_t n);
+  int64_t _rank(std::vector<uint8_t>& bit_vector, uint64_t position);
+  int64_t _select(std::vector<uint8_t>& bit_vector, uint64_t n);
   bool _is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
   void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
   void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value);

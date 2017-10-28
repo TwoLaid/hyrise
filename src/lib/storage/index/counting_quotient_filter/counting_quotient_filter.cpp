@@ -41,7 +41,6 @@ void CountingQuotientFilter<ElementType>::insert(ElementType element) {
     ++select;
     auto n = _find_first_unused_slot(select);
     while (n > select) {
-      std::cout << "loop 1" << std::endl;
       _remainders[n] = _remainders[n - 1];
       _set_bit(_runends, n, _is_bit_set(_runends, n -1));
       --n;
@@ -76,13 +75,12 @@ bool CountingQuotientFilter<ElementType>::lookup(ElementType element) {
 * Returns the number of 1s in the bit vector up to a certain position.
 **/
 template <typename ElementType>
-int64_t CountingQuotientFilter<ElementType>::_rank(std::vector<uint8_t>& bit_vector, QuotientType position) {
+int64_t CountingQuotientFilter<ElementType>::_rank(std::vector<uint8_t>& bit_vector, uint64_t position) {
   int64_t rank = 0;
-  for (QuotientType i = 0; i <= position; i++) {
+  for (uint64_t i = 0; i <= position; i++) {
     if (_is_bit_set(bit_vector, i)) {
       ++rank;
     }
-    std::cout << "rank loop" << std::endl;
   }
 
   return rank;
@@ -92,12 +90,12 @@ int64_t CountingQuotientFilter<ElementType>::_rank(std::vector<uint8_t>& bit_vec
 * Returns the position of the n-th 1 in the bit-vector
 **/
 template <typename ElementType>
-int64_t CountingQuotientFilter<ElementType>::_select(std::vector<uint8_t>& bit_vector, int64_t n) {
+int64_t CountingQuotientFilter<ElementType>::_select(std::vector<uint8_t>& bit_vector, uint64_t n) {
   if (n == 0) {
     return -1;
   }
 
-  int64_t sum = 0;
+  uint64_t sum = 0;
   for (uint32_t i = 0; i < bit_vector.size() * 8; i++) {
     if (_is_bit_set(bit_vector, i)) {
       ++sum;
@@ -170,6 +168,14 @@ template <typename ElementType>
 RemainderType CountingQuotientFilter<ElementType>::_hash_remainder(ElementType value) {
   auto hash = xxh::xxhash<32, ElementType>(&value, 1);
   return static_cast<RemainderType>(hash);
+}
+
+/**
+* Returns the number of occupied slots in the remainder array.
+**/
+template <typename ElementType>
+uint64_t CountingQuotientFilter<ElementType>::number_of_occupied_slots() {
+  return _rank(_occupieds, static_cast<QuotientType>(-1));
 }
 
 } // namespace opossum
