@@ -5,8 +5,8 @@
 
 namespace opossum {
 
-using QuotientType = uint16_t;
-using RemainderType = uint16_t;
+using QuotientType = uint8_t;
+using RemainderType = uint8_t;
 
 /**
 Following the idea and implementation of Pandey, Johnson and Patro:
@@ -22,15 +22,15 @@ class CountingQuotientFilter
   bool lookup(ElementType value);
 
  private:
-  QuotientType hash_quotient(ElementType value);
-  RemainderType hash_remainder(ElementType value);
-  QuotientType rank(std::vector<uint8_t>& bit_vector, QuotientType position);
-  QuotientType select(std::vector<uint8_t>& bit_vector, QuotientType n);
-  bool is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
-  void set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
-  void set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value);
-  void clear_bit(std::vector<uint8_t>& bit_vector, size_t bit);
-  QuotientType find_first_unused_slot(QuotientType quotient);
+  QuotientType _hash_quotient(ElementType value);
+  RemainderType _hash_remainder(ElementType value);
+  int64_t _rank(std::vector<uint8_t>& bit_vector, QuotientType position);
+  int64_t _select(std::vector<uint8_t>& bit_vector, int64_t n);
+  bool _is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
+  void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
+  void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value);
+  void _clear_bit(std::vector<uint8_t>& bit_vector, size_t bit);
+  QuotientType _find_first_unused_slot(QuotientType quotient);
 
   std::vector<uint8_t> _occupieds;
   std::vector<uint8_t> _runends;

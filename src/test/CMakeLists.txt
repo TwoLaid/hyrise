@@ -70,6 +70,7 @@ set(
     sql/sqlite_testrunner/sqlite_wrapper.cpp
     sql/sqlite_testrunner/sqlite_wrapper.hpp
     storage/adaptive_radix_tree_index_test.cpp
+    storage/counting_quotient_filter_test.cpp
     storage/chunk_test.cpp
     storage/composite_group_key_index_test.cpp
     storage/dictionary_column_test.cpp
