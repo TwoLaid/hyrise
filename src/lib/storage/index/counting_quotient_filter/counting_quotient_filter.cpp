@@ -112,7 +112,7 @@ int64_t CountingQuotientFilter<ElementType>::_select(std::vector<uint8_t>& bit_v
 * Returns whether a bit at a certain position in the bit vector is set or not.
 **/
 template <typename ElementType>
-bool CountingQuotientFilter<ElementType>::_is_bit_set(std::vector<uint8_t>& bit_vector, size_t position) {
+bool CountingQuotientFilter<ElementType>::_is_bit_set(std::vector<uint8_t>& bit_vector, uint64_t position) {
   size_t byte_number = position / 8;
   size_t offset = position % 8;
   return bit_vector[byte_number] & 1 << offset;
@@ -122,7 +122,7 @@ bool CountingQuotientFilter<ElementType>::_is_bit_set(std::vector<uint8_t>& bit_
 * Sets the bit at a certain position in a bit vector to 1.
 **/
 template <typename ElementType>
-void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
+void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vector, uint64_t bit) {
     size_t byte_number = bit / 8;
     size_t offset = bit % 8;
     bit_vector[byte_number] = bit_vector[byte_number] | (1 << offset);
@@ -132,11 +132,11 @@ void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vec
 * Sets the bit at a certain position in a bit vector to the specified value.
 **/
 template <typename ElementType>
-void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value) {
+void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vector, uint64_t position, bool value) {
   if (value) {
-    _set_bit(bit_vector, bit);
+    _set_bit(bit_vector, position);
   } else {
-    _clear_bit(bit_vector, bit);
+    _clear_bit(bit_vector, position);
   }
 }
 
@@ -144,9 +144,9 @@ void CountingQuotientFilter<ElementType>::_set_bit(std::vector<uint8_t>& bit_vec
 * Clears the bit at a certain position in a bit vector.
 **/
 template <typename ElementType>
-void CountingQuotientFilter<ElementType>::_clear_bit(std::vector<uint8_t>& bit_vector, size_t bit) {
-    size_t byte_number = bit / 8;
-    size_t offset = bit % 8;
+void CountingQuotientFilter<ElementType>::_clear_bit(std::vector<uint8_t>& bit_vector, uint64_t position) {
+    size_t byte_number = position / 8;
+    size_t offset = position % 8;
     bit_vector[byte_number] = bit_vector[byte_number] & ~(1 << offset);
 }
 
@@ -155,9 +155,8 @@ void CountingQuotientFilter<ElementType>::_clear_bit(std::vector<uint8_t>& bit_v
 **/
 template <typename ElementType>
 QuotientType CountingQuotientFilter<ElementType>::_hash_quotient(ElementType value) {
-  // arbitrary seed for the first hash iteration
-  unsigned int seed = 13;
-  auto hash = murmur2<ElementType>(value, seed);
+  uint32_t seed = 384812094;
+  auto hash = xxh::xxhash<32, ElementType>(&value, 1, seed);
   return static_cast<QuotientType>(hash);
 }
 
@@ -166,7 +165,8 @@ QuotientType CountingQuotientFilter<ElementType>::_hash_quotient(ElementType val
 **/
 template <typename ElementType>
 RemainderType CountingQuotientFilter<ElementType>::_hash_remainder(ElementType value) {
-  auto hash = xxh::xxhash<32, ElementType>(&value, 1);
+  uint32_t seed = 93498548;
+  auto hash = xxh::xxhash<32, ElementType>(&value, 1, seed);
   return static_cast<RemainderType>(hash);
 }
 

@@ -27,10 +27,10 @@ class CountingQuotientFilter
   RemainderType _hash_remainder(ElementType value);
   int64_t _rank(std::vector<uint8_t>& bit_vector, uint64_t position);
   int64_t _select(std::vector<uint8_t>& bit_vector, uint64_t n);
-  bool _is_bit_set(std::vector<uint8_t>& bit_vector, size_t bit);
-  void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit);
-  void _set_bit(std::vector<uint8_t>& bit_vector, size_t bit, bool value);
-  void _clear_bit(std::vector<uint8_t>& bit_vector, size_t bit);
+  bool _is_bit_set(std::vector<uint8_t>& bit_vector, uint64_t position);
+  void _set_bit(std::vector<uint8_t>& bit_vector, uint64_t position);
+  void _set_bit(std::vector<uint8_t>& bit_vector, uint64_t position, bool value);
+  void _clear_bit(std::vector<uint8_t>& bit_vector, uint64_t position);
   QuotientType _find_first_unused_slot(QuotientType quotient);
 
   std::vector<uint8_t> _occupieds;
