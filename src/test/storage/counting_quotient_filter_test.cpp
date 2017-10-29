@@ -12,7 +12,6 @@
 
 #include "storage/dictionary_column.hpp"
 #include "storage/index/counting_quotient_filter/counting_quotient_filter.cpp"
-#include "storage/index/counting_quotient_filter/cqf.cpp"
 
 namespace opossum {
 
@@ -22,30 +21,10 @@ class CountingQuotientFilterTest : public BaseTest {
   }
 };
 
-TEST_F(CountingQuotientFilterTest, Insert) {
-  auto filter = CountingQuotientFilter<int>();
-  filter.insert(7);
-  EXPECT_EQ(filter.number_of_occupied_slots(), 1u);
-}
-
-TEST_F(CountingQuotientFilterTest, CQFInsert) {
-  uint64_t quotient_bits = 16;
-  uint64_t remainder_bits = 8;
-  uint64_t number_of_slots = std::pow(2, quotient_bits);
-  uint64_t hash_bits = quotient_bits + remainder_bits;
-
-  gqf::QF qf;
-  uint64_t key = 123456;
-  uint64_t count = 1;
-  gqf::qf_init(&qf, number_of_slots, hash_bits, 0);
-  gqf::qf_insert(&qf, key, 0, count);
-  EXPECT_TRUE(gqf::qf_count_key_value(&qf, key, 0) >= 1);
-}
-
 TEST_F(CountingQuotientFilterTest, Membership) {
   auto filter = CountingQuotientFilter<int>();
-  filter.insert(7);
-  EXPECT_TRUE(filter.lookup(7));
+  filter.insert(12345);
+  EXPECT_TRUE(filter.count(12345) >= 1);
 }
 
 TEST_F(CountingQuotientFilterTest, MultipleMembership) {
@@ -60,16 +39,16 @@ TEST_F(CountingQuotientFilterTest, MultipleMembership) {
   filter.insert(80);
   filter.insert(90);
   filter.insert(100);
-  EXPECT_TRUE(filter.lookup(10));
-  EXPECT_TRUE(filter.lookup(20));
-  EXPECT_TRUE(filter.lookup(30));
-  EXPECT_TRUE(filter.lookup(40));
-  EXPECT_TRUE(filter.lookup(50));
-  EXPECT_TRUE(filter.lookup(60));
-  EXPECT_TRUE(filter.lookup(70));
-  EXPECT_TRUE(filter.lookup(80));
-  EXPECT_TRUE(filter.lookup(90));
-  EXPECT_TRUE(filter.lookup(100));
+  EXPECT_TRUE(filter.count(10) >= 1);
+  EXPECT_TRUE(filter.count(20) >= 1);
+  EXPECT_TRUE(filter.count(30) >= 1);
+  EXPECT_TRUE(filter.count(40) >= 1);
+  EXPECT_TRUE(filter.count(50) >= 1);
+  EXPECT_TRUE(filter.count(60) >= 1);
+  EXPECT_TRUE(filter.count(70) >= 1);
+  EXPECT_TRUE(filter.count(80) >= 1);
+  EXPECT_TRUE(filter.count(90) >= 1);
+  EXPECT_TRUE(filter.count(100) >= 1);
 }
 
 } // namespace opossum
