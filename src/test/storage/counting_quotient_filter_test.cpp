@@ -12,6 +12,7 @@
 
 #include "storage/dictionary_column.hpp"
 #include "storage/index/counting_quotient_filter/counting_quotient_filter.cpp"
+#include "storage/index/counting_quotient_filter/cqf.cpp"
 
 namespace opossum {
 
@@ -25,6 +26,20 @@ TEST_F(CountingQuotientFilterTest, Insert) {
   auto filter = CountingQuotientFilter<int>();
   filter.insert(7);
   EXPECT_EQ(filter.number_of_occupied_slots(), 1u);
+}
+
+TEST_F(CountingQuotientFilterTest, CQFInsert) {
+  uint64_t quotient_bits = 16;
+  uint64_t remainder_bits = 8;
+  uint64_t number_of_slots = std::pow(2, quotient_bits);
+  uint64_t hash_bits = quotient_bits + remainder_bits;
+
+  gqf::QF qf;
+  uint64_t key = 123456;
+  uint64_t count = 1;
+  gqf::qf_init(&qf, number_of_slots, hash_bits, 0);
+  gqf::qf_insert(&qf, key, 0, count);
+  EXPECT_TRUE(gqf::qf_count_key_value(&qf, key, 0) >= 1);
 }
 
 TEST_F(CountingQuotientFilterTest, Membership) {
