@@ -9,9 +9,17 @@ namespace opossum {
 
 template <typename ElementType>
 CountingQuotientFilter<ElementType>::CountingQuotientFilter() {
-  _remainders.resize(std::pow(2, sizeof(QuotientType) * 8));
-  _occupieds.resize(std::pow(2, sizeof(QuotientType) * 8) / 8);
-  _runends.resize(std::pow(2, sizeof(QuotientType) * 8) / 8);
+  auto number_of_slots = std::pow(2, sizeof(QuotientType) * 8);
+  _remainders.resize(number_of_slots);
+
+  // Store an occupied bit for every slot, packed in bytes
+  _occupieds.resize(number_of_slots / 8);
+
+  // Store a runend bit for every slot, packed in bytes
+  _runends.resize(number_of_slots / 8);
+
+  // Store an 8-bit offset for every 64 slots
+  _offsets.resize(number_of_slots / 64);
 }
 
 template <typename ElementType>

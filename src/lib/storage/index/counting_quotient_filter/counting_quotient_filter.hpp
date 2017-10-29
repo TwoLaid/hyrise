@@ -35,6 +35,7 @@ class CountingQuotientFilter
 
   std::vector<uint8_t> _occupieds;
   std::vector<uint8_t> _runends;
+  std::vector<uint8_t> _offsets;
   std::vector<RemainderType> _remainders;
 };
 
